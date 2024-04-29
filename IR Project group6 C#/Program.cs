@@ -1,13 +1,15 @@
 ﻿//opens The data folder TODO: fix the file path
 using Pluralize.NET;
+using System.IO;
 
 namespace IRSystem
 {
     class Program
     {
-        static void Process()
+
+        static void Process(string path)
         {
-            StreamReader reader = File.OpenText("C:\\Users\\Mike\\source\\repos\\IR Project group6 C#\\IR Project group6 C#\\Data\\00.txt");
+            StreamReader reader = File.OpenText(path);
             IPluralize pluralizer = new Pluralizer();
             string line;
             //grabs the text from the document and proccesses it
@@ -21,7 +23,7 @@ namespace IRSystem
                 foreach (string item in items)
                 {
                     string temp;
-                    Console.WriteLine(item);
+                    //Console.WriteLine(item);
                     temp = item.ToLower();
                     temp = pluralizer.Singularize(temp);
                     Console.WriteLine(temp);
@@ -34,9 +36,18 @@ namespace IRSystem
                 // or anything else we like.
             }
         }
+        //need to figure out how to create the inverted index probably do this in the process function
         static void Main(string[] args)
         {
-            Process();
+            var files = from file in Directory.EnumerateFiles("C:\\Users\\Mike\\source\\repos\\IR Project group6 C#\\IR Project group6 C#\\Data") select file;
+            Console.WriteLine("Files: {0}", files.Count<string>().ToString());
+            foreach (var file in files)
+            {
+                Console.WriteLine("{0}", file);
+
+                Process(file);
+            }
+            
         }
     }
 }
