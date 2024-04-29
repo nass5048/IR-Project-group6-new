@@ -39,7 +39,7 @@ namespace IRSystem
         //need to figure out how to create the inverted index probably do this in the process function
         static void Main(string[] args)
         {
-            var files = from file in Directory.EnumerateFiles("C:\\Users\\Mike\\source\\repos\\IR Project group6 C#\\IR Project group6 C#\\Data") select file;
+            var files = from file in Directory.EnumerateFiles("..\\..\\..\\Data") select file;
             Console.WriteLine("Files: {0}", files.Count<string>().ToString());
             foreach (var file in files)
             {
