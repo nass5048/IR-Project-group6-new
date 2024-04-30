@@ -16,13 +16,14 @@ namespace IR_Project_group6_C_
         {
             this.token = token;
             this.locations.Add(locations);
-            AddSoundex();
+            if(!string.IsNullOrEmpty(token))
+                AddSoundex(token);
         }
         public void AddLocation(string location)
         {
             locations.Add(location);
         }
-        public void AddSoundex()
+        public void AddSoundex(string token)
         {
             const int MaxSoundexCodeLength = 4;
 

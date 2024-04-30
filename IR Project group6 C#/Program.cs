@@ -88,6 +88,7 @@ namespace IRSystem
             foreach(var t in data)
             {
                 Console.WriteLine(t.token);
+                Console.WriteLine(t.soundex);
             }
         }
     }
