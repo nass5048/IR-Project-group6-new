@@ -23,7 +23,7 @@ namespace IR_Project_group6_C_
         {
             locations.Add(location);
         }
-        public void AddSoundex(string token)
+        public string AddSoundex(string token)
         {
             const int MaxSoundexCodeLength = 4;
 
@@ -70,6 +70,7 @@ namespace IR_Project_group6_C_
                         .ToString()
                             .PadRight(MaxSoundexCodeLength, '0')
                                 .Substring(0, MaxSoundexCodeLength);
+            return soundex;
         }
         private char GetCharNumberForLetter(char letter)
         {
