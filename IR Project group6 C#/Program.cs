@@ -10,7 +10,7 @@ namespace IRSystem
     {
         static List<InvertedIndexData> Sort (List<InvertedIndexData> data)
         {
-            data = data.OrderBy(i => i.token).ToList();
+            data = data.OrderByDescending(i => i.token).ToList();
             return data;
         }
         static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, string location)
@@ -57,6 +57,9 @@ namespace IRSystem
                     temp = item.ToLower();
                     temp = Regex.Replace(temp, @"[^\w\d\s]", "");
                     temp = pluralizer.Singularize(temp);
+
+                    if (string.IsNullOrWhiteSpace(temp) || "1234567890".Contains(temp.First()) || "1234567890".Contains(temp.Last()))
+                        continue;
                     data = checkIndex(data, temp, path.Substring(14));
                     //Console.WriteLine(temp);
 
