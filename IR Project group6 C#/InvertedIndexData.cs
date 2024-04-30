@@ -9,13 +9,13 @@ namespace IR_Project_group6_C_
     internal class InvertedIndexData
     {
         public string token;
-        public List<int> locations = new List<int>();
-        public InvertedIndexData(string token, int locations)
+        public List<string> locations = new List<string>();
+        public InvertedIndexData(string token, string locations)
         {
             this.token = token;
             this.locations.Add(locations);
         }
-        public void AddLocation(int location)
+        public void AddLocation(string location)
         {
             locations.Add(location);
         }

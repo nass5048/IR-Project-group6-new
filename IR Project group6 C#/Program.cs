@@ -9,7 +9,7 @@ namespace IRSystem
     class Program
     {
         
-        static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, int location)
+        static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, string location)
         {
             bool isInIndex = false;
             int i = 0;
@@ -32,7 +32,7 @@ namespace IRSystem
             }
             return invertedindex;
         }
-        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path, int docID)
+        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path)
         {
 
             StreamReader reader = File.OpenText(path);
@@ -53,7 +53,7 @@ namespace IRSystem
                     temp = item.ToLower();
                     temp = Regex.Replace(temp, @"[^\w\d\s]", "");
                     temp = pluralizer.Singularize(temp);
-                    data = checkIndex(data, temp, docID);
+                    data = checkIndex(data, temp, path.Substring(14));
                     //Console.WriteLine(temp);
 
                     list.Add(temp);
@@ -76,9 +76,9 @@ namespace IRSystem
             {
                 Console.WriteLine("{0}", file);
 
-                data = Process(data, file, docID);
-                docID++;
+                data = Process(data, file);
             }
+            //prints out the index
             Console.WriteLine("_______________________");
             foreach(var t in data)
             {
