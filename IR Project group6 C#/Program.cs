@@ -12,17 +12,19 @@ namespace IRSystem
         static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, int location)
         {
             bool isInIndex = false;
+            int i = 0;
             foreach(var index in invertedindex)
             {
                 if (isInIndex)
                 {
-                   
+                    invertedindex[i].AddLocation(location);
                     break;
                 }
                 if(index.token == test)
                 {
                     isInIndex = true;
                 }
+                i++;
             }
             if(!isInIndex)
             {
@@ -30,7 +32,7 @@ namespace IRSystem
             }
             return invertedindex;
         }
-        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path)
+        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path, int docID)
         {
 
             StreamReader reader = File.OpenText(path);
@@ -51,7 +53,7 @@ namespace IRSystem
                     temp = item.ToLower();
                     temp = Regex.Replace(temp, @"[^\w\d\s]", "");
                     temp = pluralizer.Singularize(temp);
-                    data = checkIndex(data, temp, 1);
+                    data = checkIndex(data, temp, docID);
                     //Console.WriteLine(temp);
 
                     list.Add(temp);
@@ -69,16 +71,23 @@ namespace IRSystem
             var files = from file in Directory.EnumerateFiles("..\\..\\..\\Data") select file;
             Console.WriteLine("Files: {0}", files.Count<string>().ToString());
             List<InvertedIndexData> data = new List<InvertedIndexData>();
+            int docID = 0;
             foreach (var file in files)
             {
                 Console.WriteLine("{0}", file);
 
-                data = Process(data, file);
+                data = Process(data, file, docID);
+                docID++;
             }
             Console.WriteLine("_______________________");
             foreach(var t in data)
             {
-                Console.WriteLine(t.token);
+                Console.Write(t.token + " +++ ");
+                foreach(var i in t.locations)
+                {
+                    Console.Write(i + ", ");
+                }
+                Console.WriteLine();
             }
         }
     }
