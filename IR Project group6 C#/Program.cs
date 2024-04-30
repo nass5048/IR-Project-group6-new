@@ -30,20 +30,7 @@ namespace IRSystem
             }
             return invertedindex;
         }
-        static string RemovePunctuations(string s)
-        {
-            string result = "";
-            foreach (char c in s)
-            {
-                
-                if (!Regex.IsMatch(c.ToString(),@"[.,\/#!$%\^&\*;:{}=\-_`~()@?]") && c != '\"' && c != '\'')                 {
-                    result += c;
-                }
-            }
-            s = result;
-            return s;
-        }
-        static void Process(List<InvertedIndexData> data, string path)
+        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path)
         {
 
             StreamReader reader = File.OpenText(path);
@@ -63,18 +50,18 @@ namespace IRSystem
                     //Console.WriteLine(item);
                     temp = item.ToLower();
                     temp = Regex.Replace(temp, @"[^\w\d\s]", "");
-                    //temp = RemovePunctuations(temp);
                     temp = pluralizer.Singularize(temp);
                     data = checkIndex(data, temp, 1);
-                    Console.WriteLine(temp);
+                    //Console.WriteLine(temp);
 
                     list.Add(temp);
                 }
-
+                
                 // At this point, `myInteger` and `path` contain the values we want
                 // for the current line. We can then store those values or print them,
                 // or anything else we like.
             }
+            return data;
         }
         //need to figure out how to create the inverted index probably do this in the process function
         static void Main(string[] args)
@@ -86,9 +73,13 @@ namespace IRSystem
             {
                 Console.WriteLine("{0}", file);
 
-                Process(data, file);
+                data = Process(data, file);
             }
-            
+            Console.WriteLine("_______________________");
+            foreach(var t in data)
+            {
+                Console.WriteLine(t.token);
+            }
         }
     }
 }
