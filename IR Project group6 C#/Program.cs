@@ -8,7 +8,11 @@ namespace IRSystem
 {
     class Program
     {
-        
+        static List<InvertedIndexData> Sort (List<InvertedIndexData> data)
+        {
+            data = data.OrderBy(i => i.token).ToList();
+            return data;
+        }
         static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, string location)
         {
             bool isInIndex = false;
@@ -79,15 +83,11 @@ namespace IRSystem
                 data = Process(data, file);
             }
             //prints out the index
+            data = Sort(data);
             Console.WriteLine("_______________________");
             foreach(var t in data)
             {
-                Console.Write(t.token + " +++ ");
-                foreach(var i in t.locations)
-                {
-                    Console.Write(i + ", ");
-                }
-                Console.WriteLine();
+                Console.WriteLine(t.token);
             }
         }
     }
