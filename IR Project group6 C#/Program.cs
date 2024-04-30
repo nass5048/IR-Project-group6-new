@@ -1,4 +1,5 @@
 ﻿//opens The data folder TODO: fix the file path
+using IR_Project_group6_C_;
 using Pluralize.NET;
 using System.IO;
 
@@ -6,9 +7,31 @@ namespace IRSystem
 {
     class Program
     {
-
-        static void Process(string path)
+        
+        static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, int location)
         {
+            bool isInIndex = false;
+            foreach(var index in invertedindex)
+            {
+                if (isInIndex)
+                {
+                   
+                    break;
+                }
+                if(index.token == test)
+                {
+                    isInIndex = true;
+                }
+            }
+            if(!isInIndex)
+            {
+                invertedindex.Add(new InvertedIndexData(test, location));
+            }
+            return invertedindex;
+        }
+        static void Process(List<InvertedIndexData> data, string path)
+        {
+
             StreamReader reader = File.OpenText(path);
             IPluralize pluralizer = new Pluralizer();
             string line;
@@ -26,6 +49,7 @@ namespace IRSystem
                     //Console.WriteLine(item);
                     temp = item.ToLower();
                     temp = pluralizer.Singularize(temp);
+                    data = checkIndex(data, temp, 1);
                     Console.WriteLine(temp);
 
                     list.Add(temp);
@@ -41,11 +65,12 @@ namespace IRSystem
         {
             var files = from file in Directory.EnumerateFiles("..\\..\\..\\Data") select file;
             Console.WriteLine("Files: {0}", files.Count<string>().ToString());
+            List<InvertedIndexData> data = new List<InvertedIndexData>();
             foreach (var file in files)
             {
                 Console.WriteLine("{0}", file);
 
-                Process(file);
+                Process(data, file);
             }
             
         }
