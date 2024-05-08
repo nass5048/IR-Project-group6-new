@@ -1,144 +1,155 @@
-﻿//opens The data folder TODO: fix the file path
+﻿using System.Text.RegularExpressions;
 using IR_Project_group6_C_;
 using Pluralize.NET;
-using System.IO;
-using System.Reflection.PortableExecutable;
-using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace IRSystem
 {
     class Program
     {
-        static List<InvertedIndexData> Sort (List<InvertedIndexData> data)
-        {
-            data = data.OrderByDescending(i => i.token).ToList();
-            return data;
-        }
-        static List<InvertedIndexData> checkIndex(List<InvertedIndexData> invertedindex, string test, string location)
-        {
-            bool isInIndex = false;
-            int i = 0;
-            foreach(var index in invertedindex)
-            {
-                if (isInIndex)
-                {
-                    invertedindex[i].AddLocation(location);
-                    break;
-                }
-                if(index.token == test)
-                {
-                    isInIndex = true;
-                }
-                i++;
-            }
-            if(!isInIndex)
-            {
-                invertedindex.Add(new InvertedIndexData(test, location));
-            }
-            return invertedindex;
-        }
-        static List<InvertedIndexData> Process(List<InvertedIndexData> data, string path)
-        {
+        static Dictionary<string, InvertedIndexData> invertedIndex = new Dictionary<string, InvertedIndexData>();
+        static string DIRPATH = "..\\..\\..\\Data";
 
-            StreamReader reader = File.OpenText(path);
-            IPluralize pluralizer = new Pluralizer();
-            string line;
-            //grabs the text from the document and proccesses it
-            while ((line = reader.ReadLine()) != null)
-            {
-                string[] items = line.Split(' ');
-                //int myInteger = int.Parse(items[1]);   // Here's your integer.
-
-                // Now let's find the path.
-                List<string> list = new List<string>();
-                foreach (string item in items)
-                {
-                    string temp;
-                    //Console.WriteLine(item);
-                    temp = item.ToLower();
-                    temp = Regex.Replace(temp, @"[^\w\d\s]", "");
-                    temp = pluralizer.Singularize(temp);
-
-                    if (string.IsNullOrWhiteSpace(temp) || "1234567890".Contains(temp.First()) || "1234567890".Contains(temp.Last()))
-                        continue;
-                    data = checkIndex(data, temp, path.Substring(14));
-                    //Console.WriteLine(temp);
-
-                    list.Add(temp);
-                }
-                
-                // At this point, `myInteger` and `path` contain the values we want
-                // for the current line. We can then store those values or print them,
-                // or anything else we like.
-            }
-            return data;
-        }
-        //need to figure out how to create the inverted index probably do this in the process function
-        static InvertedIndexData Search(string query)
-        {
-            IPluralize pluralizer = new Pluralizer();
-            string line;
-            //grabs the text from the document and proccesses it
-                string[] items = query.Split(' ');
-                //int myInteger = int.Parse(items[1]);   // Here's your integer.
-
-                // proccess the query
-                List<string> list = new List<string>();
-                foreach (string item in items)
-                {
-                    string temp;
-                    //Console.WriteLine(item);
-                    temp = item.ToLower();
-                    temp = Regex.Replace(temp, @"[^\w\d\s]", "");
-                    temp = pluralizer.Singularize(temp);
-
-                    if (string.IsNullOrWhiteSpace(temp) || "1234567890".Contains(temp.First()) || "1234567890".Contains(temp.Last()))
-                        continue;
-                    //Console.WriteLine(temp);
-                    
-
-                    list.Add(temp);
-                }
-
-            // At this point, `myInteger` and `path` contain the values we want
-            // for the current line. We can then store those values or print them,
-            // or anything else we like.
-            return new InvertedIndexData("e", "e");
-        }
         static void Main(string[] args)
         {
-            var files = from file in Directory.EnumerateFiles("..\\..\\..\\Data") select file;
-            Console.WriteLine("Files: {0}", files.Count<string>().ToString());
-            List<InvertedIndexData> data = new List<InvertedIndexData>();
-            int docID = 0;
-            foreach (var file in files)
-            {
-                Console.WriteLine("{0}", file);
+            Console.WriteLine("Loading documents...");
+            LoadDocuments(DIRPATH);
+            Console.WriteLine("Documents loaded. Ready to receive queries.");
 
-                data = Process(data, file);
-            }
-            //prints out the index
-            data = Sort(data);
-            Console.WriteLine("_______________________");
-            foreach(var t in data)
+            string userInput;
+            do
             {
-                Console.WriteLine(t.token);
-                Console.WriteLine(t.soundex);
+                Console.Write("Enter query (or 'exit' to quit): ");
+                userInput = Console.ReadLine();
+                if (!string.IsNullOrEmpty(userInput) && userInput.ToLower() != "exit")
+                {
+                    if (userInput.StartsWith("top"))
+                    {
+                        DisplayTopFrequentWords(userInput);
+                    }
+                    else
+                    {
+                        var results = Search(userInput);
+                        if (results.Any())
+                        {
+                            foreach (var result in results)
+                            {
+                                Console.WriteLine($"Token: {result.token}, Soundex: {result.soundex}, Locations: {string.Join(", ", result.locationFreqs.Keys.Select(Path.GetFileName))}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("No results found.");
+                        }
+                    }
+                }
+            } while (userInput.ToLower() != "exit");
+        }
+        static void DisplayTopFrequentWords(string command)
+        {
+            if (int.TryParse(command.Substring(3), out int topCount))
+            {
+                // Aggregate all frequencies of each token across all files and also get a Soundex code
+                var topWords = invertedIndex.Values
+                                .GroupBy(indexData => new { indexData.token, indexData.soundex })  // Group by token and soundex
+                                .Select(group => new {
+                                    Token = group.Key.token,
+                                    Soundex = group.Key.soundex,
+                                    Frequency = group.Sum(data => data.locationFreqs.Sum(lf => lf.Value))
+                                })
+                                .OrderByDescending(tf => tf.Frequency)
+                                .Take(topCount)
+                                .ToList();
+
+                if (topWords.Any())
+                {
+                    foreach (var word in topWords)
+                    {
+                        Console.WriteLine($"Token: {word.Token}, Soundex: {word.Soundex}, Frequency: {word.Frequency}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No frequent words found.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid command format. Use 'topXX' where XX is a number.");
             }
         }
+
+        static void LoadDocuments(string directoryPath)
+        {
+            var files = Directory.EnumerateFiles(directoryPath).ToList();
+            Console.WriteLine($"Files: {files.Count}");
+
+            foreach (var file in files)
+            {
+                ProcessFile(file);
+            }
+        }
+
+        static void ProcessFile(string filePath)
+        {
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var words = TokenizeAndNormalize(line);
+                    foreach (var word in words)
+                    {
+                        if (!invertedIndex.ContainsKey(word))
+                            invertedIndex[word] = new InvertedIndexData(word, filePath);
+                        else
+                            invertedIndex[word].AddLocation(filePath);
+                    }
+                }
+            }
+        }
+
+        static List<string> TokenizeAndNormalize(string text)
+        {
+            var pluralizer = new Pluralizer();
+            return Regex.Split(text.ToLower(), @"\W+")
+                        .Where(token => token != string.Empty && !token.Any(char.IsDigit))
+                        .Select(token => pluralizer.Singularize(token))
+                        .ToList();
+        }
+
+        static List<InvertedIndexData> Search(string query)
+        {
+            List<InvertedIndexData> results = new List<InvertedIndexData>();
+
+            // Check if the query is likely a Soundex code (typically one uppercase letter followed by three digits)
+            if (Regex.IsMatch(query, @"^[A-Z][0-9]{3}$"))
+            {
+                // Searching by Soundex code
+                foreach (var indexData in invertedIndex.Values)
+                {
+                    if (indexData.soundex == query)
+                    {
+                        results.Add(indexData);
+                    }
+                }
+            }
+            else
+            {
+                // Tokenizing and normalizing plaintext query
+                var tokens = TokenizeAndNormalize(query);
+
+                // Searching by plaintext token
+                foreach (var token in tokens)
+                {
+                    if (invertedIndex.ContainsKey(token))
+                    {
+                        results.Add(invertedIndex[token]);
+                    }
+                }
+            }
+
+            return results;
+        }
+
     }
 }
-
-
-
-// See https://aka.ms/new-console-template for more information
-
-//create a GUI
-//parse files in blocks
-//create the inverted index
-//lookup data from the inverted index
-//display if the data was found and where the data was found
-//only create the inverted index when the user selects to on the gui -> this will prevent creatoin of the invertedd index every time
-//see if there is a quick way to view changes in files to possibly just update the index every time a specipic file has been changed -> Metadata possibly
-

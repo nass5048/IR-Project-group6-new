@@ -1,87 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace IR_Project_group6_C_
 {
     internal class InvertedIndexData
     {
-        public string token;
-        public List<string> locations = new List<string>();
-        public string soundex;
-        public InvertedIndexData(string token, string locations)
+        public string token { get; set; }
+        public Dictionary<string, int> locationFreqs { get; set; } = new Dictionary<string, int>();
+        public string soundex { get; private set; }
+
+        public InvertedIndexData(string token, string location)
         {
             this.token = token;
-            this.locations.Add(locations);
-            if(!string.IsNullOrEmpty(token))
-                AddSoundex(token);
+            AddLocation(location);
+            this.soundex = GenerateSoundex(token);
         }
+
         public void AddLocation(string location)
         {
-            locations.Add(location);
+            if (locationFreqs.ContainsKey(location))
+                locationFreqs[location]++;
+            else
+                locationFreqs.Add(location, 1);
         }
-        public string AddSoundex(string token)
+
+        public static string GenerateSoundex(string token)
         {
-            const int MaxSoundexCodeLength = 4;
+            if (string.IsNullOrWhiteSpace(token)) return "0000";
+            string upperToken = token.ToUpper();
+            StringBuilder soundexCode = new StringBuilder();
+            soundexCode.Append(upperToken[0]);
 
-            var soundexCode = new StringBuilder();
-            var previousWasHOrW = false;
+            string encoded = new string(upperToken.Substring(1).Where(c => "BFPVCGJKQSXZDTLMNR".Contains(c)).ToArray());
+            encoded = Regex.Replace(encoded, "[AEIOUYHW]", "");
+            encoded = Regex.Replace(encoded, "[BFPV]+", "1");
+            encoded = Regex.Replace(encoded, "[CGJKQSXZ]+", "2");
+            encoded = Regex.Replace(encoded, "[DT]+", "3");
+            encoded = Regex.Replace(encoded, "[L]+", "4");
+            encoded = Regex.Replace(encoded, "[MN]+", "5");
+            encoded = Regex.Replace(encoded, "[R]+", "6");
 
-            token = Regex.Replace(
-                token == null ? string.Empty : token.ToUpper(),
-                    @"[^\w\s]",
-                        string.Empty);
+            soundexCode.Append(encoded);
 
-            if (string.IsNullOrEmpty(token))
-                soundex = string.Empty.PadRight(MaxSoundexCodeLength, '0');
-
-            soundexCode.Append(token.First());
-
-            for (var i = 1; i < token.Length; i++)
-            {   
-                var numberCharForCurrentLetter =
-                    GetCharNumberForLetter(token[i]);
-
-                if (i == 1 &&
-                        numberCharForCurrentLetter ==
-                            GetCharNumberForLetter(soundexCode[0]))
-                    continue;
-
-                if (soundexCode.Length > 2 && previousWasHOrW &&
-                        numberCharForCurrentLetter ==
-                            soundexCode[soundexCode.Length - 2])
-                    continue;
-
-                if (soundexCode.Length > 0 &&
-                        numberCharForCurrentLetter ==
-                            soundexCode[soundexCode.Length - 1])
-                    continue;
-
-                soundexCode.Append(numberCharForCurrentLetter);
-
-                previousWasHOrW = "HW".Contains(token[i]);
-            }
-
-            soundex = soundexCode
-                    .Replace("0", string.Empty)
-                        .ToString()
-                            .PadRight(MaxSoundexCodeLength, '0')
-                                .Substring(0, MaxSoundexCodeLength);
-            return soundex;
-        }
-        private char GetCharNumberForLetter(char letter)
-        {
-            if ("BFPV".Contains(letter)) return '1';
-            if ("CGJKQSXZ".Contains(letter)) return '2';
-            if ("DT".Contains(letter)) return '3';
-            if ('L' == letter) return '4';
-            if ("MN".Contains(letter)) return '5';
-            if ('R' == letter) return '6';
-
-            return '0';
+            return soundexCode.ToString().Substring(0, Math.Min(4, soundexCode.Length)).PadRight(4, '0');
         }
     }
 }
